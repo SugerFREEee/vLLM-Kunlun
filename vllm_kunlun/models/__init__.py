@@ -3,6 +3,17 @@ from vllm import ModelRegistry
 
 def register_model():
 
+    # Opt-in (env KUNLUN_FUSE_AR_RMSNORM=1): wire the fused
+    # AllReduce+Residual+RMSNorm BKCL op into the Qwen3 decoder forward.
+    try:
+        from .kunlun_fused_ar_rmsnorm import apply as _apply_fused_ar_rmsnorm
+
+        _apply_fused_ar_rmsnorm()
+    except Exception as _e:  # never block model registration
+        from vllm.logger import init_logger
+
+        init_logger(__name__).warning("[KunlunFuse] apply skipped: %s", _e)
+
     # TODO Remove all of models registration below
 
     # from .demo_model import DemoModel  # noqa: F401

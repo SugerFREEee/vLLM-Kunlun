@@ -23,9 +23,11 @@ torch::Tensor weak_ref_tensor(torch::Tensor& tensor) {
     return new_tensor;
 }
 
-TORCH_LIBRARY(_C, m) {
-    m.def("weak_ref_tensor", &weak_ref_tensor);
-}
+// NOTE: vllm's own _C.abi3.so already defines `_C::weak_ref_tensor`
+// (csrc/torch_bindings.cpp). Do NOT register it here or torch aborts with a
+// duplicate-operator error. We only expose it via the pybind module below for
+// direct `vllm_kunlun._kunlun.weak_ref_tensor` access; torch.ops._C.weak_ref_tensor
+// is provided by vllm.
 
 PYBIND11_MODULE(_kunlun, m) {
     m.def("weak_ref_tensor", &weak_ref_tensor);
