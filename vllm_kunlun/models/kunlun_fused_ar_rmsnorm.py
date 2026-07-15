@@ -15,10 +15,11 @@ Then each `layernorm(hidden, residual)` is routed through the fused op:
   * input_layernorm: whenever residual is not None (previous down_proj partial);
     the very first layer has residual=None (embedding, already full) -> plain norm.
 
-Gating (BKCL microbenchmark + kernel constraints): TP==4, token_num%4==0,
-0<token_num<=KUNLUN_FUSE_AR_RMSNORM_MAX_TOKENS. Otherwise fall back to a plain
-all_reduce (we still owe it, since the linear skipped it) + RMSNorm, so results
-are correct regardless of gating.
+Gating (BKCL microbenchmark + kernel constraints): TP==4,
+0<token_num<=KUNLUN_FUSE_AR_RMSNORM_MAX_TOKENS. token_num need NOT be divisible
+by the TP size: the BKCL mesh rs_norm_2ag path pads it up to a multiple of nranks
+internally. Otherwise fall back to a plain all_reduce (we still owe it, since the
+linear skipped it) + RMSNorm, so results are correct regardless of gating.
 
 Enable with env KUNLUN_FUSE_AR_RMSNORM=1 (default off).
 """
@@ -143,7 +144,6 @@ def _fused_norm(self, ln, hidden_partial, residual):
         getattr(self, "_kunlun_fuse", False)
         and residual is not None
         and _MIN_TOKENS <= m <= _MAX_TOKENS
-        and m % 4 == 0
     )
     if not use_fused:
         # linear skipped the reduce (reduce_results=False), so we must do it here.
