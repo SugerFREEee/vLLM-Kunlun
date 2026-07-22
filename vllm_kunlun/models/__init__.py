@@ -14,6 +14,17 @@ def register_model():
 
         init_logger(__name__).warning("[KunlunFuse] apply skipped: %s", _e)
 
+    # Opt-in (env XFUSION_ENABLE=1): wire XFusion's fused op into the Qwen3
+    # decoder. Model adaptation lives here; XFusion only provides the operator.
+    try:
+        from .xfusion_qwen3 import patch_qwen3 as _xfusion_patch_qwen3
+
+        _xfusion_patch_qwen3()
+    except Exception as _e:  # never block model registration
+        from vllm.logger import init_logger
+
+        init_logger(__name__).warning("[XFusion] patch skipped: %s", _e)
+
     # TODO Remove all of models registration below
 
     # from .demo_model import DemoModel  # noqa: F401

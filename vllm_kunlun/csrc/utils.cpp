@@ -23,11 +23,14 @@ torch::Tensor weak_ref_tensor(torch::Tensor& tensor) {
     return new_tensor;
 }
 
-// NOTE: vllm's own _C.abi3.so already defines `_C::weak_ref_tensor`
-// (csrc/torch_bindings.cpp). Do NOT register it here or torch aborts with a
-// duplicate-operator error. We only expose it via the pybind module below for
-// direct `vllm_kunlun._kunlun.weak_ref_tensor` access; torch.ops._C.weak_ref_tensor
-// is provided by vllm.
+// On Kunlun, vllm's own `_C.abi3.so` is never built (no `vllm._C` module), so
+// nothing registers `torch.ops._C.weak_ref_tensor`. CUDA graph capture in vLLM
+// calls it, so we must register it here. A catch-all kernel (function passed to
+// def) is used instead of a CUDA-keyed impl so it also matches XPU tensors that
+// masquerade as CUDA under XPytorch.
+TORCH_LIBRARY(_C, m) {
+    m.def("weak_ref_tensor(Tensor input) -> Tensor", &weak_ref_tensor);
+}
 
 PYBIND11_MODULE(_kunlun, m) {
     m.def("weak_ref_tensor", &weak_ref_tensor);

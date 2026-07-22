@@ -11,14 +11,14 @@ set -euo pipefail
 source /root/miniconda/etc/profile.d/conda.sh
 conda activate python310_torch29_cuda
 
-export LD_LIBRARY_PATH=/home/wjs/baidu/xpu/bkcl/output/so:${LD_LIBRARY_PATH:-}
+export LD_LIBRARY_PATH=/home/wjs/baidu/personal-code/wjs-bkcl/output/so:${LD_LIBRARY_PATH:-}
 export no_proxy=127.0.0.1,localhost,${no_proxy:-}
 export NO_PROXY=127.0.0.1,localhost,${NO_PROXY:-}
 
 HOST=${HOST:-127.0.0.1}
 PORT=${PORT:-8866}
 MODEL=${MODEL:-Qwen3-32B}
-TOKENIZER_PATH=${TOKENIZER_PATH:-/home/wjs/models/Qwen3-32B}
+TOKENIZER_PATH=${TOKENIZER_PATH:-/models/Qwen3-32B}
 MODEL_NAME=${MODEL_NAME:-qwen3_32b}
 
 # Decode-heavy cases for AR+Residual+RMSNorm fusion attribution.
